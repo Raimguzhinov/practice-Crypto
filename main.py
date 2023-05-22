@@ -1,6 +1,7 @@
 import requests
 import json
 from dotenv import load_dotenv
+from bisect import bisect_left
 import os
 
 load_dotenv()
@@ -39,10 +40,16 @@ def get_cryptocurrencies():
 
 def search_cryptocurrency(data, search_name):
     search_name = search_name.lower()
-    for currency in data:
-        if search_name == currency['name'].lower():
-            return currency
-    return None
+    names = [currency['name'].lower() for currency in data]
+    symbols = [currency['symbol'].lower() for currency in data]
+    index = bisect_left(names, search_name)
+
+    if index < len(data) and names[index] == search_name:
+        return data[index]
+    elif search_name in symbols:
+        return data[symbols.index(search_name)]
+    else:
+        return None
 
 def print_currency(currency):
     print(f"\n\t{currency['name']} ({currency['symbol']})")
@@ -57,7 +64,7 @@ def print_all_currencies(data):
 def main():
     data = get_cryptocurrencies()
     while True:
-        search = input("\n<название криптовалюты> | <all> | <exit> : ")
+        search = input("\n<название криптовалюты> | <all> | <exit> : ").strip()
         if search == "exit":
             break
         elif search == "all":
